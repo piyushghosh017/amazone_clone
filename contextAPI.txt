@@ -1,0 +1,264 @@
+------------------------ StateProvider.js --------------
+
+import React,{createContext,useContext,useReducer} from "react";
+
+## this is data layer
+export const StateContext=createContext();
+
+## build a provider
+export const StateProvider=({reducer,initialState,children})=>{
+	
+	return <StateContext.Provider value={useReducer(reducer,initialState)}/>
+	{children}
+	</StateContext.Provider>
+	
+};
+
+// This is how we use it inside component
+export const useStateValue =() => useContext(StateContext)
+
+
+----------------------   index.js    --------------------
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import { StateProvider } from './StateProvider';
+import reducer,{ initialState } from './reducer';
+
+ReactDOM.render(
+    <React.StrictMode>
+      <StateProvider initialState={initialState} reducer={reducer}>
+        <App />
+      </StateProvider>
+    </React.StrictMode>,
+    document.getElementById('root')
+
+);
+//  children in stateProvider is App here
+
+
+
+--------------  reducer.js ----------------------
+
+export const initialState={
+    basket:[
+        {
+            id:"3254354345",
+            title:"Apple iPad Pro 12.9 inch ",
+            price:595.99,
+            rating:4,
+            image:"https://i.pinimg.com/236x/56/e0/3a/56e03a84c41f2b4d5bdfe67ad56fecc2.jpg"
+
+        },
+        {
+            id:"3254364345",
+            title:"Apple iPad Pro 12.9 inch ",
+            price:595.99,
+            rating:4,
+            image:"https://i.pinimg.com/564x/8e/8e/35/8e8e3546849d11e345a06cff35199878.jpg"
+
+        }
+    ],
+    user:null,
+};
+
+// selector
+export const getBasketTotal = (basket)=>
+basket?.reduce((amount , item)=> item.price + amount,0);
+
+
+
+
+//  data layer as state
+const reducer =(state,action)=> {
+    // console.log(action);
+    switch(action.type){
+        case 'ADD_TO_BASKET':
+            // logic for Add to basket
+            return {
+                ...state,
+                basket:[...state.basket,action.item],
+            };
+            
+        case 'REMOVE_FROM_BASKET':
+            // logic for Remove_from_basket
+            let newBasket=[...state.basket];
+            const index=state.basket.findIndex( (basketItem) => basketItem.id === action.id);
+            if(index >=0){
+                // index exist , remove it
+                newBasket.splice(index,1);
+                
+            } else{
+                console.warn(
+                    `cant remove product(id:${action.id}) as its not product`
+                )
+            }
+            return {...state,basket:newBasket};
+
+        default:
+            return state;
+    }
+    
+}
+export default reducer ;
+
+
+---------------------   product.js     ----------------
+
+import React from 'react'
+import "./Product.css"
+import {useStateValue} from "./StateProvider";
+
+
+function Product({id,title,image,price,rating}) {
+    // whatever we are passing as props here from home , we can acess it 
+
+    const [{basket},dispatch]=useStateValue();
+
+    const addToBasket=()=>{
+        // add items to basket
+        dispatch({
+            type:"ADD_TO_BASKET",
+            item:{
+                id:id,
+                title:title,
+                image:image,
+                price:price,
+                rating:rating
+            },
+        });
+    };
+
+    return (
+        <div className="product">
+            <div className='product_info'> 
+                <p>{title}</p>
+                <p className="product_price">
+                    <small>$</small>
+                    <strong>{price}</strong>
+                </p>
+                <div className="product_rating">
+                    {
+                        Array(rating)
+                        .fill()
+                        .map((_)=> (
+                            <p>⭐</p>
+                        ))
+                    }
+                </div>
+            </div>
+
+            <img src={image} />
+            <button onClick={addToBasket}>Add to basket</button>
+        </div>
+    )
+}
+
+export default Product
+
+
+------------- checkout.js ---------------
+
+import React from 'react'
+import { useStateValue } from './StateProvider'
+import "./Checkout.css";
+import CheckoutProduct from './CheckoutProduct';
+import Subtotal from "./Subtotal.js";
+
+
+function Checkout() {
+    const [{basket}] = useStateValue();
+    return (
+        <div className="checkout">
+            <div className="checkout_left">
+            <img className="checkout_ad"
+            src="https://images-na.ssl-images-amazon.com/images/G/02/UK_CCMP/TM/OCC_Amazon1._CB423492668_.jpg" alt=''/>
+
+            { basket.length === 0 ? (
+                <div>
+                    <h2>Your Shopping Basket is empty</h2>
+                    <p>Your have no items in your basket.To buy one or more items , click "Add to basket" next to the item.</p>
+                </div>
+
+            ) : (
+                <div>
+                    <h2 className="checkout_title">Your Shopping Basket</h2>
+                    {/* list out all of the checkout products */}
+                    {basket.map(item => (
+                        <CheckoutProduct
+                            id={item.id}
+                            title={item.title}
+                            image={item.image}
+                            price={item.price}
+                            rating={item.rating}
+                        />
+
+                    ))}
+                </div>
+            ) }
+            </div>
+            {basket.length > 0 && (
+                <div className="checkout_right">
+                    <Subtotal/>
+                    
+                </div>
+                )
+            }
+        </div>
+    );
+}
+
+export default Checkout
+
+
+---------------- CheckoutProduct ----------------------- 
+
+import React from 'react'
+import "./CheckoutProduct.css";
+import { useStateValue } from './StateProvider';
+
+
+function CheckoutProduct({id,title,image,rating,price}) {
+
+    const [{basket},dispatch] =useStateValue()
+    const removeFromBasket = ()=>{
+        dispatch({
+            type:"REMOVE_FROM_BASKET",
+            id:id,
+        });
+
+    };
+
+
+    return (
+        <div className="checkoutProduct">
+            <img className="checkoutProduct_image" src={image} alt=""/>
+
+            <div className="checkoutProduct_info">
+                <p className="checkoutProduct_title">{title}</p>
+
+                <p className="checkoutProduct_price">
+                    <small>$</small>
+                    <strong>{price}</strong>
+                </p>
+
+                <div className="checkoutProduct_rating">
+                    {
+                        Array(rating)
+                        .fill()
+                        .map((_)=> (
+                            <p>⭐</p>
+                        ))
+                    }
+                </div>
+                    <button onClick={removeFromBasket}>Remove from basket</button>
+
+            </div>
+        </div>
+    )
+}
+
+export default CheckoutProduct
+

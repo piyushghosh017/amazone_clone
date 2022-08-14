@@ -1,0 +1,68 @@
+.header{
+    background-color: black;
+    display: flex;
+    align-items: center;
+    position: static;
+}
+.header_logo{
+    width:100px;
+    /* so the aspect ratio of logo will me same even for resize , it wont strech */
+    object-fit: contain; 
+    margin:0 10px;
+    margin-top: 10px;
+}
+
+.header_search{
+    display: flex;
+    flex: 1;
+}
+
+.header_searchInput{
+    border: none;
+    width: 100%;
+    height: 12px;
+    padding: 10px;
+}
+
+.header_searchIcon{
+    background-color: orange;
+    padding: 4px;
+    height:24px !important ;
+}
+
+.headerNav{
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.header_link{
+    color: white;
+    text-decoration: none;
+    margin-left:10px ;
+    margin-right: 10px;
+}
+
+.header_option{
+    display: flex;
+    flex-direction: column;
+}
+
+.header_optionOne{
+    font-size: 10px;
+   
+
+}
+
+.header_optionTwo{
+    font-size: 13px;
+    font-weight: 800;
+
+}
+.header_optionBasket{
+    display: flex;
+    align-items: center;
+}
+.header_basketCount{
+    margin-right: 10px;
+    margin-left: 10px;
+}
